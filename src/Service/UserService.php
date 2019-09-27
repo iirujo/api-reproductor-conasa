@@ -78,11 +78,9 @@ class UserService
     $usuario->setNombre($variables->get('nombre'));
     $usuario->setApellidos($variables->get('apellidos'));
     $usuario->setEmail($variables->get('email'));
-    dump($variables->get('fecha_nacimiento'));
     $usuario->setFechaNacimiento(new \DateTime($variables->get('fecha_nacimiento')));
-    $em = $this->em;
-    $em->persist($usuario);
-    $em->flush();
-    return $usuario->getNombre();
+    $this->em->persist($usuario);
+    $this->em->flush();
+    return $usuario;
   }
 }
