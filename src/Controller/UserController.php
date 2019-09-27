@@ -38,21 +38,40 @@ class UserController extends FOSRestController
      */
     public function postUserAction(Request $request, UserService $userService, ValidatorInterface $validator)
     {
-        
+
         $form = $this->createForm(UserType::class);
+        $json = $this->getJson($request);
+        $form->submit($json);
+
         $errors = $validator->validate($form);
         if (count($errors) > 0) {
             $errorsString = (string) $errors;
             return new JsonResponse($errorsString, JsonResponse::HTTP_BAD_REQUEST);
         }
-        
-        $data = json_decode($request->getContent(), true);
-        $form->submit($data);
-        if ($form->isSubmitted() && $form->isValid()) {
 
-            $nombre = $userService->crearUsuario($request);
-            return new JsonResponse(["success" => $nombre." has been registered!"], Response::HTTP_CREATED);
+        if ($form->isSubmitted() && $form->isValid()) {
+            
+            $user = $userService->crearUsuario($request);
+            
+            return new JsonResponse(json_decode($this->container->get('jms_serializer')
+            ->serialize($user, 'json')), Response::HTTP_CREATED);
         
-        }   
+        }
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return mixed
+     *
+     * @throws HttpException
+     */
+    private function getJson(Request $request)
+    {
+        $data = json_decode($request->getContent(), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new HttpException(400, 'Invalid json');
+        }
+        return $data;
     }
 }
