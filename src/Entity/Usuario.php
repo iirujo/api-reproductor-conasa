@@ -9,7 +9,10 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UsuarioRepository")
- * @UniqueEntity("email")
+ * @UniqueEntity(
+ *      fields = "email",
+ *      message = "validators.usuario.email.UniqueEntity"
+ *  )
  */
 class Usuario
 {
@@ -22,36 +25,48 @@ class Usuario
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank
-     * @Assert\NotNull
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.nombre.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.nombre.NotNull"
+     * )
      * @Assert\Length(
      *     min = 2,
      *     max = 20,
-     *     minMessage = "Your first name must be at least 2 characters long",
-     *     maxMessage = "Your first name cannot be longer than 20 characters"
+     *     minMessage = "validators.usuario.nombre.Length.minMessage",
+     *     maxMessage = "validators.usuario.nombre.Length.maxMessage"
      * )
      */
     private $nombre;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank
-     * @Assert\NotNull
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.apellidos.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.apellidos.NotNull"
+     * )
      * @Assert\Length(
      *     min = 4,
      *     max = 50,
-     *     minMessage = "Your surname must be at least {{ limit }} characters long",
-     *     maxMessage = "Your surname cannot be longer than {{ limit }} characters"
+     *     minMessage = "validators.usuario.apellidos.Length.minMessage",
+     *     maxMessage = "validators.usuario.apellidos.Length.maxMessage"
      * )
      */
     private $apellidos;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank
-     * @Assert\NotNull
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.email.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.email.NotNull"
+     * )
      * @Assert\Email(
-     *     message = "The email '{{ value }}' is not a valid email.",
+     *     message = "validators.usuario.email.Email",
      *     checkMX = true
      * )
      */
@@ -59,9 +74,15 @@ class Usuario
 
     /**
      * @ORM\Column(type="datetime")
-     * @Assert\NotBlank
-     * @Assert\NotNull
-     * @Assert\DateTime
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.fecha_nacimiento.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.fecha_nacimiento.NotNull"
+     * )
+     * @Assert\DateTime(
+     *     message = "validators.usuario.fecha_nacimiento.DateTime"
+     * )
      */
     private $fechaNacimiento;
 
