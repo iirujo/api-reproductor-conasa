@@ -19,6 +19,8 @@
         "symfony/framework-bundle": "4.3.*",
         "symfony/orm-pack": "^1.0",
         "symfony/polyfill-intl-messageformatter": "^1.12",
+        "symfony/security-bundle": "4.3.*",
+        "symfony/serializer": "4.3.*",
         "symfony/translation": "4.3.*",
         "symfony/twig-bundle": "4.3.*",
         "symfony/validator": "4.3.*",

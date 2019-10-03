@@ -1,6 +1,6 @@
 controllers:
     resource: ../../src/Controller/
     type: annotation
-    # prefix:
-    #     en: '/en'
-    #     es: '/es'
+    prefix:
+        en: '/en'
+        es: '/es'

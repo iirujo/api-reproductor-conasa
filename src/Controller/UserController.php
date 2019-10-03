@@ -40,10 +40,10 @@ class UserController extends FOSRestController
      *
      * Este método lo utilizaremos para el registro de usuarios
      *
-     * @Route("/user", name="user_post", methods={"POST"})
+     * @Route("/user", name="user_post", methods={"POST", "GET", "PUT", "DELETE"})
      * @SWG\Response(
      *     response=200,
-     *     description="Devuelve el objeto dle usuario en json",
+     *     description="Devuelve el objeto del usuario en json",
      *     @SWG\Schema(
      *         type="array",
      *         @SWG\Items(ref=@Model(type=Usuario::class, groups={"full"}))
@@ -55,11 +55,30 @@ class UserController extends FOSRestController
      *     type="string",
      *     description="Nombre del usuario"
      * ),
-      * @SWG\Parameter(
+     * @SWG\Parameter(
      *     name="apellidos",
      *     in="formData",
      *     type="string",
      *     description="Apellidos del usuario"
+     * ),
+     * @SWG\Parameter(
+     *     name="email",
+     *     in="formData",
+     *     type="string",
+     *     description="Email del usuario"
+     * ),
+     * @SWG\Parameter(
+     *     name="fecha_nacimiento",
+     *     in="body",
+     *     type="date",
+     *     description="Fecha de nacimiento del usuario",
+     *     @SWG\Schema(type="integer")
+     * ),
+     * @SWG\Parameter(
+     *     name="password",
+     *     in="formData",
+     *     type="string",
+     *     description="Contraseña del usuario"
      * )
      * @SWG\Tag(name="Usuario")
      */
@@ -72,8 +91,10 @@ class UserController extends FOSRestController
 
         $errors = $validator->validate($form);
         if (count($errors) > 0) {
-            $errorsString = (string) $errors;
-            return new JsonResponse($errorsString, JsonResponse::HTTP_BAD_REQUEST);
+
+            return new JsonResponse(['errors' => json_decode($this->container->get('jms_serializer')
+            ->serialize($errors, 'json'))], JsonResponse::HTTP_BAD_REQUEST);
+
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -102,18 +123,19 @@ class UserController extends FOSRestController
         return $data;
     }
 
-    public function showUser($id)
+    /**
+     * @Route("/user/{idUser}", name="user_post", methods={"GET"})
+     */
+    public function showUser(UserService $userService, int $idUser)
     {
-        $user = $this->getDoctrine()
-            ->getRepository(UserType::class)
-            ->find($id);
 
-        if (!$user) {
-            throw $this->createNotFoundException(
-                'No se ha encontrado un usuario con el id '.$id
-            );
+        try{
+            $userService->searchUser($idUser);
+        } catch(\Exception $e) {
+
         }
+        
 
-        return new Response('Check out this great product: '.$user->getName());
+        //return new JsonResponse(..., Response::HTTP_OK);
     }
 }

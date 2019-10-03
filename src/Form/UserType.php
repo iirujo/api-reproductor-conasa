@@ -21,6 +21,7 @@ class UserType extends AbstractType
         'widget' => 'single_text',
         'format' => 'yyyy-MM-dd',
       ])
+      ->add('password')
     ;
   }
   public function configureOptions(OptionsResolver $resolver)

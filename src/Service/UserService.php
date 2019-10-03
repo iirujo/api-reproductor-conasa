@@ -71,16 +71,27 @@ class UserService
     return $mensaje;
   }
 
-  public function crearUsuario(Request $request)
-  {
+  public function crearUsuario(Request $request){
+
     $usuario = new Usuario();
     $variables = $request->request;
     $usuario->setNombre($variables->get('nombre'));
     $usuario->setApellidos($variables->get('apellidos'));
     $usuario->setEmail($variables->get('email'));
     $usuario->setFechaNacimiento(new \DateTime($variables->get('fecha_nacimiento')));
+    $usuario->setPassword($variables->get('password'));
     $this->em->persist($usuario);
     $this->em->flush();
     return $usuario;
+
   }
+
+  public function searchUser($userId) : User{
+
+    $user = $this->em
+            ->getRepository(UserType::class)
+            ->findOneById($userId);
+    return $user;
+  }
+  
 }

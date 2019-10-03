@@ -86,6 +86,23 @@ class Usuario
      */
     private $fechaNacimiento;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.password.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.password.NotNull"
+     * )
+     * @Assert\Length(
+     *     min = 4,
+     *     max = 30,
+     *     minMessage = "validators.usuario.password.Length.minMessage",
+     *     maxMessage = "validators.usuario.password.Length.maxMessage"
+     * )
+     */
+    private $password;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -135,6 +152,18 @@ class Usuario
     public function setFechaNacimiento(\DateTimeInterface $fechaNacimiento): self
     {
         $this->fechaNacimiento = $fechaNacimiento;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
 
         return $this;
     }
