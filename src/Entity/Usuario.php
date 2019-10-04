@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UsuarioRepository")
@@ -14,7 +14,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  *      message = "validators.usuario.email.UniqueEntity"
  *  )
  */
-class Usuario
+class Usuario implements UserInterface
 {
     /**
      * @ORM\Id()
@@ -71,6 +71,17 @@ class Usuario
      * )
      */
     private $email;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.username.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.username.NotNull"
+     * )
+     */
+    private $username;
 
     /**
      * @ORM\Column(type="datetime")
@@ -144,6 +155,18 @@ class Usuario
         return $this;
     }
 
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): self
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+
     public function getFechaNacimiento(): ?\DateTimeInterface
     {
         return $this->fechaNacimiento;
@@ -166,6 +189,20 @@ class Usuario
         $this->password = $password;
 
         return $this;
+    }
+
+    public function getSalt()
+    {
+        // The bcrypt and argon2i algorithms don't require a separate salt.
+        // You *may* need a real salt if you choose a different encoder.
+        return null;
+    }
+    public function getRoles()
+    {
+        return $this->roles;
+    }
+    public function eraseCredentials()
+    {
     }
     
 }

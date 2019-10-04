@@ -16,6 +16,7 @@ class UserType extends AbstractType
     $builder
       ->add('nombre')
       ->add('apellidos')
+      ->add('username')
       ->add('email',EmailType::class)
       ->add('fecha_nacimiento', DateType::class, [
         'widget' => 'single_text',
