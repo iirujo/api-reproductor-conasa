@@ -2,38 +2,38 @@
 
 namespace App\Controller;
 
+use App\Entity\Usuario;
+use App\Service\UserService;
+use App\Service\Helpers;
+use App\Form\UserType;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use FOS\RestBundle\Controller\FOSRestController;
-use FOS\RestBundle\Controller\Annotations\Post;
 use FOS\RestBundle\Controller\Annotations\Get;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use App\Entity\Usuario;
-use App\Service\UserService;
-use App\Service\Helpers;
-use App\Form\UserType;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Swagger\Annotations as SWG;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /** @Route("/api", name="blog_") */
 class UserController extends FOSRestController
 {
+
     /**
      * 
      * @Get("/", name="homepage")
      *
      */
-    public function homePageAction(Request $request)
+    public function homePageAction(Request $request, TranslatorInterface $translator)
     {
-        return new JsonResponse(
-            [
-                'message' => 'Bienvenido al api rest de Iñaki',
-            ],
-            JsonResponse::HTTP_OK
-        );    
+
+        $msg = $translator->trans("welcome_msg");
+
+        return new JsonResponse(['hola' => $msg],JsonResponse::HTTP_OK);    
     }
 
      /**
@@ -69,13 +69,6 @@ class UserController extends FOSRestController
      *     description="Email del usuario"
      * ),
      * @SWG\Parameter(
-     *     name="fecha_nacimiento",
-     *     in="body",
-     *     type="date",
-     *     description="Fecha de nacimiento del usuario",
-     *     @SWG\Schema(type="integer")
-     * ),
-     * @SWG\Parameter(
      *     name="password",
      *     in="formData",
      *     type="string",
@@ -86,11 +79,19 @@ class UserController extends FOSRestController
      *     in="formData",
      *     type="string",
      *     description="Nickname del usuario"
+     * )*,
+     * @SWG\Parameter(
+     *     name="fechaNacimiento",
+     *     in="body",
+     *     type="datetime",
+     *     description="Fecha de nacimiento del usuario",
+     *     @SWG\Schema(type="integer")
      * )
      * @SWG\Tag(name="Usuario")
      * 
      */
-    public function postUserAction(Request $request, UserService $userService, ValidatorInterface $validator)
+    public function postUserAction(Request $request, UserService $userService, 
+                                    ValidatorInterface $validator)
     {
 
         $form = $this->createForm(UserType::class);
@@ -152,23 +153,27 @@ class UserController extends FOSRestController
      * )
      * @SWG\Tag(name="Usuario")
      */
-    public function showUser(UserService $userService, int $idUser, Helpers $userHelper)
+    public function showUser(UserService $userService, int $idUser, Helpers $helper, Request $request,
+                            TranslatorInterface $translator)
     {
 
         try{
 
-            $user = $userService->searchUser($idUser);
+            $user = $userService->searchUserById($idUser);
 
         } catch(\Exception $e) {
 
-            $msg = $userHelper->handleErrors($e);
+            $msg = $helper->handleErrors($e);
             return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
 
         }
         
         if (is_null($user)){
-            $message = "No hay ningún usuario que corresponda con el ID introducido";
-            return $message;
+
+            $msg = $translator->trans('no_user_with_id');
+            
+            return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+
         }
 
         return new JsonResponse(json_decode($this->container->get('jms_serializer')
@@ -206,13 +211,6 @@ class UserController extends FOSRestController
      *     description="Email del usuario"
      * ),
      * @SWG\Parameter(
-     *     name="fecha_nacimiento",
-     *     in="body",
-     *     type="date",
-     *     description="Fecha de nacimiento del usuario",
-     *     @SWG\Schema(type="integer")
-     * ),
-     * @SWG\Parameter(
      *     name="password",
      *     in="formData",
      *     type="string",
@@ -223,20 +221,30 @@ class UserController extends FOSRestController
      *     in="formData",
      *     type="string",
      *     description="Nickname del usuario"
+     * ),
+     * @SWG\Parameter(
+     *     name="fechaNacimiento",
+     *     in="body",
+     *     type="datetime",
+     *     description="Fecha de nacimiento del usuario",
+     *     @SWG\Schema(type="integer")
      * )
      * @SWG\Tag(name="Usuario")
      */
-    public function editUser(UserService $userService, Helpers $userHelper, int $idUser, Request $request)
+    public function editUser(UserService $userService, Helpers $helper, int $idUser, Request $request,
+                            TranslatorInterface $translator)
     {
 
         try{
 
-            $user = $userService->searchUser($idUser);
+            $user = $userService->searchUserById($idUser);
 
             if (is_null($user)) {
 
-                $message = "No hay ningún usuario que corresponda con el ID introducido";
-                return $message;
+                $msg = "no_user_with_id";
+                $msg = $translator->trans($msg);
+            
+                return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
 
             }
             else {
@@ -247,7 +255,7 @@ class UserController extends FOSRestController
 
         } catch(\Exception $e) {
 
-            $msg = $userHelper->handleErrors($e);
+            $msg = $helper->handleErrors($e);
             return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
 
         }
@@ -277,16 +285,19 @@ class UserController extends FOSRestController
      * )
      * @SWG\Tag(name="Usuario")
      */
-    public function deleteUser(UserService $userService, int $idUser, Helpers $userHelper){
+    public function deleteUser(UserService $userService, int $idUser, Helpers $helper,
+                                TranslatorInterface $translator){
 
         try{
 
-            $user = $userService->searchUser($idUser);
+            $user = $userService->searchUserById($idUser);
 
             if (is_null($user)) {
-
-                $message = "No hay ningún usuario que corresponda con el ID introducido";
-                return $message;
+                
+                $msg = "no_user_with_id";
+                $msg = $translator->trans($msg);
+            
+                return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
 
             }
             else {
@@ -297,12 +308,84 @@ class UserController extends FOSRestController
 
         } catch(\Exception $e) {
 
-            $msg = $userHelper->handleErrors($e);
+            $msg = $helper->handleErrors($e);
             return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
 
         }
         
         return new JsonResponse(json_decode($this->container->get('jms_serializer')
             ->serialize($user, 'json')), Response::HTTP_OK);
+    }
+
+    /**
+     * @Route("/login", name="user_login", methods={"POST"})
+     * 
+     * @SWG\Response(
+     *     response=200,
+     *     description="Devuelve el objeto del usuario en json",
+     *     @SWG\Schema(
+     *         type="array",
+     *         @SWG\Items(ref=@Model(type=Usuario::class, groups={"full"}))
+     *     )
+     * )
+     * @SWG\Parameter(
+     *     name="email",
+     *     in="formData",
+     *     type="string",
+     *     description="Email del usuario"
+     * ),
+     * @SWG\Parameter(
+     *     name="password",
+     *     in="formData",
+     *     type="string",
+     *     description="Contraseña del usuario"
+     * )
+     */
+    public function loginUserAction(UserService $userService, Request $request, 
+                                    UserPasswordEncoderInterface $encoder, Helpers $helper,
+                                    TranslatorInterface $translator)
+    {
+        
+        $variables = $request->request;
+        $email = $variables->get('email');
+        $error = false;
+        $user = $userService->searchUserByEmail($email);
+
+        if(is_null($user)){
+
+            $error = true;
+
+        }
+        else {
+
+            $password = $variables->get('password');
+
+            $validPassword = $encoder->isPasswordValid(
+                $user,
+                $password
+            );
+        
+            if(!$validPassword){
+            
+                $error = true;
+
+            }
+        }
+
+        if($error){
+            
+            $msg = "incorrect_email_or_password";
+            $msg = $translator->trans($msg);
+            
+            return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+
+        }
+
+        $msgSuccess = $translator->trans("login_success");
+            
+        return new JsonResponse([$success => $msg], Response::HTTP_BAD_REQUEST);
+        /* $now = new \DateTime();
+        $now->modify("+ 2 days");
+        return new JsonResponse(['message' => $now->format("d-m-Y")], Response::HTTP_OK); */
     }
 }

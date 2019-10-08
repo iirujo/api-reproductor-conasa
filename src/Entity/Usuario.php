@@ -84,20 +84,6 @@ class Usuario implements UserInterface
     private $username;
 
     /**
-     * @ORM\Column(type="datetime")
-     * @Assert\NotBlank(
-     *     message = "validators.usuario.fecha_nacimiento.NotBlank"
-     * )
-     * @Assert\NotNull(
-     *     message = "validators.usuario.fecha_nacimiento.NotNull"
-     * )
-     * @Assert\DateTime(
-     *     message = "validators.usuario.fecha_nacimiento.DateTime"
-     * )
-     */
-    private $fechaNacimiento;
-
-    /**
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank(
      *     message = "validators.usuario.password.NotBlank"
@@ -113,6 +99,20 @@ class Usuario implements UserInterface
      * )
      */
     private $password;
+
+    /**
+     * @ORM\Column(type="datetime")
+     * @Assert\DateTime(
+     *      message = "validators.usuario.fechaNacimiento.DateTime"
+     * )
+     *  @Assert\NotBlank(
+     *     message = "validators.usuario.fechaNacimiento.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.fechaNacimiento.NotNull"
+     * )
+     */
+    private $fechaNacimiento;
 
     public function getId(): ?int
     {
@@ -166,19 +166,7 @@ class Usuario implements UserInterface
 
         return $this;
     }
-
-    public function getFechaNacimiento(): ?\DateTimeInterface
-    {
-        return $this->fechaNacimiento;
-    }
-
-    public function setFechaNacimiento(\DateTimeInterface $fechaNacimiento): self
-    {
-        $this->fechaNacimiento = $fechaNacimiento;
-
-        return $this;
-    }
-
+    
     public function getPassword(): ?string
     {
         return $this->password;
@@ -203,6 +191,18 @@ class Usuario implements UserInterface
     }
     public function eraseCredentials()
     {
+    }
+
+    public function getFechaNacimiento(): ?\DateTimeInterface
+    {
+        return $this->fechaNacimiento;
+    }
+
+    public function setFechaNacimiento(\DateTimeInterface $fechaNacimiento): self
+    {
+        $this->fechaNacimiento = $fechaNacimiento;
+
+        return $this;
     }
     
 }

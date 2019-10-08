@@ -23,7 +23,7 @@ class UserService
     $nombre = $request->request->get('nombre');
     $apellidos = $request->request->get('apellidos');
     $email = $request->request->get('email');
-    $fecha_nacimiento = $request->request->get('fecha_nacimiento');
+    $fechaNacimiento = $request->request->get('fechaNacimiento');
 
     if ($nombre == "") {
       $mensaje[] = "El campo nombre es obligatorio";
@@ -65,7 +65,7 @@ class UserService
     }
 
 
-    if ($fecha_nacimiento == "")
+    if ($fechaNacimiento == "")
     {
       $mensaje[] = "El campo fecha de nacimiento es obligatorio";
     }
@@ -81,8 +81,7 @@ class UserService
     $usuario->setApellidos($variables->get('apellidos'));
     $usuario->setEmail($variables->get('email'));
     $usuario->setUsername($variables->get('username'));
-    $usuario->setFechaNacimiento(new \DateTime($variables->get('fecha_nacimiento')));
-    $usuario->setPassword($variables->get('password'));
+    $usuario->setFechaNacimiento(new \DateTime($variables->get('fechaNacimiento')));
     $encodedPassword = $this->encoder->encodePassword($usuario, $variables->get('password'));
     $usuario->setPassword($encodedPassword);
     $this->em->persist($usuario);
@@ -91,12 +90,22 @@ class UserService
 
   }
 
-  public function searchUser(int $idUser) : ?Usuario{
+  public function searchUserById(int $idUser) : ?Usuario{
 
     $user = $this->em
             ->getRepository(Usuario::class)
             ->findOneById($idUser);
     return $user;
+
+  }
+
+  public function searchUserByEmail($email) : ?Usuario{
+
+    $user = $this->em
+            ->getRepository(Usuario::class)
+            ->findOneBy(['email' => $email]);
+    return $user;
+    
   }
 
   public function changeUser(Usuario $user, Request $request) : ?Usuario{
@@ -105,7 +114,7 @@ class UserService
     $nombre = $variables->get('nombre');
     $apellidos = $variables->get('apellidos');
     $email = $variables->get('email');
-    $fechaNacimiento =$variables->get('fecha_nacimiento');
+    $fechaNacimiento = new \DateTime($variables->get('fechaNacimiento'));
     $password = $variables->get('password');
 
     if (!is_null($nombre) && $nombre != "") {
@@ -125,7 +134,10 @@ class UserService
     }
 
     if (!is_null($password) && $password != "") {
-      $user->setPassword($password);
+      
+      $encodedPassword = $this->encoder->encodePassword($user, $variables->get('password'));
+      $user->setPassword($encodedPassword);
+      
     }
 
     $this->em->flush();
