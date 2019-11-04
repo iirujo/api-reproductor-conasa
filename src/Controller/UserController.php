@@ -211,12 +211,6 @@ class UserController extends FOSRestController
      *     description="Email del usuario"
      * ),
      * @SWG\Parameter(
-     *     name="password",
-     *     in="formData",
-     *     type="string",
-     *     description="Contraseña del usuario"
-     * ),
-     * @SWG\Parameter(
      *     name="username",
      *     in="formData",
      *     type="string",
@@ -262,6 +256,10 @@ class UserController extends FOSRestController
         
         return new JsonResponse(json_decode($this->container->get('jms_serializer')
             ->serialize($user, 'json')), Response::HTTP_OK);
+            
+        return new JsonResponse(['usuario' => json_decode($this->container->get('jms_serializer')
+                                                            ->serialize($user, 'json'))],
+                                Response::HTTP_OK);
     }
 
     /**
@@ -381,11 +379,56 @@ class UserController extends FOSRestController
 
         }
 
-        $msgSuccess = $translator->trans("login_success");
-            
-        return new JsonResponse([$success => $msg], Response::HTTP_BAD_REQUEST);
-        /* $now = new \DateTime();
+
+        $password = $user->getPassword();
+        $now = new \DateTime();
         $now->modify("+ 2 days");
-        return new JsonResponse(['message' => $now->format("d-m-Y")], Response::HTTP_OK); */
+        return new JsonResponse(['time' => $now->format("d-m-Y"),
+                                'usuario' => json_decode($this->container->get('jms_serializer')
+                                ->serialize($user, 'json'))],
+                                 Response::HTTP_OK);
+
+        //return array($user, $now->format("d-m-Y"));
+    }
+
+    /**
+     * Metodo que busca y muestra objetos a partir de su parametro
+     * 
+     * @Route("/search", name="search", methods={"POST"})
+     * @SWG\Response(
+     *     response=200,
+     *     description="Devuelve el objeto en json",
+     *     @SWG\Schema(
+     *         type="array",
+     *         @SWG\Items(ref=@Model(type=Usuario::class, groups={"full"}))
+     *     )
+     * )
+     * 
+     * @SWG\Parameter(
+     *     name="searchedItem",
+     *     in="formData",
+     *     type="string",
+     *     description="Objeto a buscar"
+     * )
+     * @SWG\Tag(name="Usuario")
+     */
+    public function searchItem(UserService $userService, Helpers $helper, Request $request)
+    {
+
+        try{
+            $variables = $request->request;
+            $keyword = $variables->get('keyword');
+            $type = $variables->get('type');
+            $token = $userService->authorize();
+            $result = $userService->searchItem($token, $keyword, $type);
+
+        } catch(\Exception $e) {
+
+            $msg = $helper->handleErrors($e);
+            return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+
+        }
+
+        return new JsonResponse(json_decode($result), Response::HTTP_OK);
     }
 }

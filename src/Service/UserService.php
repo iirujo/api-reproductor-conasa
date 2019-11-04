@@ -115,7 +115,7 @@ class UserService
     $apellidos = $variables->get('apellidos');
     $email = $variables->get('email');
     $fechaNacimiento = new \DateTime($variables->get('fechaNacimiento'));
-    $password = $variables->get('password');
+    $username = $variables->get('username');
 
     if (!is_null($nombre) && $nombre != "") {
       $user->setNombre($nombre);
@@ -133,11 +133,8 @@ class UserService
       $user->setFechaNacimiento($fechaNacimiento);
     }
 
-    if (!is_null($password) && $password != "") {
-      
-      $encodedPassword = $this->encoder->encodePassword($user, $variables->get('password'));
-      $user->setPassword($encodedPassword);
-      
+    if (!is_null($username) && $username != "") {
+      $user->setNombre($username);
     }
 
     $this->em->flush();
@@ -160,5 +157,52 @@ class UserService
     return $user;
 
   }
+
+  public function authorize() {
+
+    $ch = curl_init();
+    //$headers = array("Authorization: Basic ZWM5ZmYyNzIxMjhkNGI0NTg2MWYwNzU5YjY3MWZjZDM6NWViYzQzMWVmNDJiNDFiMDk2MzRjMzMzNzQzNTJjZDI=");
+    $headers = array("Authorization: Basic ".$_ENV['USER_DATA_BASE64']);
+    $data = "grant_type=client_credentials";
+    //curl_setopt($ch, CURLOPT_URL, "https://accounts.spotify.com/api/token");
+    curl_setopt($ch, CURLOPT_URL, $_ENV['URL_TOKEN']);
+    curl_setopt($ch, CURLOPT_POST, TRUE);
+    
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $result = curl_exec ($ch);
+
+    curl_close($ch);
+
+    return $result;
+
+  }
+
+  public function searchItem($token, $keyword, $type) {
+
+    $keyword = str_replace(' ', '%20', $keyword);
+    $data = "q=".$keyword."&type=".$type."";
+    $url = $_ENV['URL_SEARCH'];
+    $token = json_decode($token, true);
+    $token = "Authorization: Bearer ".$token["access_token"];
+    $token = array($token);
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url.'?'.$data);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $token);
+    
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $result = curl_exec($ch);
+    curl_close($ch);
+
+    return $result;
+
+  }
+
 
 }
