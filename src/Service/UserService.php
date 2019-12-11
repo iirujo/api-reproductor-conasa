@@ -204,5 +204,21 @@ class UserService
 
   }
 
+  public function sendEmail($name, \Swift_Mailer $mailer) {
+    $message = (new  \Swift_Message('Hello Email'))
+      ->setFrom('iirujoconasa1@gmail.com')
+      ->setTo('inakiirujo@gmail.com')
+      ->setBody(
+        "holajksna de nuevo"
+        /* $this->renderView(
+          'registration.html.twig',
+          ['name' => $name]
+        ),
+        'text/html' */
+      );
+      $mailer->send($message);
+      
+      //return $this->render(...);
+  }
 
 }

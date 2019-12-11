@@ -316,7 +316,7 @@ class UserController extends FOSRestController
     }
 
     /**
-     * @Route("/login", name="user_login", methods={"POST"})
+     * @Route("/login", name="user_login", methods={"POST", "GET"})
      * 
      * @SWG\Response(
      *     response=200,
@@ -341,8 +341,10 @@ class UserController extends FOSRestController
      */
     public function loginUserAction(UserService $userService, Request $request, 
                                     UserPasswordEncoderInterface $encoder, Helpers $helper,
-                                    TranslatorInterface $translator)
+                                    TranslatorInterface $translator, \Swift_Mailer $mailer)
     {
+
+        $userService->sendEmail('inaki', $mailer);
         
         $variables = $request->request;
         $email = $variables->get('email');
@@ -383,7 +385,7 @@ class UserController extends FOSRestController
         $password = $user->getPassword();
         $now = new \DateTime();
         $now->modify("+ 2 days");
-        return new JsonResponse(['time' => $now->format("d-m-Y"),
+        return new JsonResponse(['time' => $now->format("Y-m-d H:i:s"),
                                 'usuario' => json_decode($this->container->get('jms_serializer')
                                 ->serialize($user, 'json'))],
                                  Response::HTTP_OK);
@@ -430,5 +432,21 @@ class UserController extends FOSRestController
         }
 
         return new JsonResponse(json_decode($result), Response::HTTP_OK);
+    }
+
+    /**
+     * Metodo que busca y muestra objetos a partir de su parametro
+     * 
+     * @Route("/search-types", name="search_types", methods={"GET"})
+     * @SWG\Response(
+     *     response=200,
+     *     description="Devuelve el objeto en json"
+     * )
+     * 
+     * @SWG\Tag(name="Search")
+     */
+    public function getSearchTypes() {
+        $searchTypes = ['album', 'artist', 'track'];
+        return new JsonResponse(['types' => $searchTypes], Response::HTTP_OK);
     }
 }
