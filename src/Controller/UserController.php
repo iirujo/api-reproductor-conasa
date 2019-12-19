@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Usuario;
+use App\Entity\RecoverHash;
 use App\Service\UserService;
 use App\Service\Helpers;
 use App\Form\UserType;
@@ -22,7 +23,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /** @Route("/api", name="blog_") */
 class UserController extends FOSRestController
 {
-
     /**
      * 
      * @Get("/", name="homepage")
@@ -115,6 +115,8 @@ class UserController extends FOSRestController
         
         }
     }
+
+
 
     /**
      * @param Request $request
@@ -262,6 +264,8 @@ class UserController extends FOSRestController
                                 Response::HTTP_OK);
     }
 
+    
+
     /**
      * Metodo que borra un usuario a partir de su ID.
      * 
@@ -284,7 +288,8 @@ class UserController extends FOSRestController
      * @SWG\Tag(name="Usuario")
      */
     public function deleteUser(UserService $userService, int $idUser, Helpers $helper,
-                                TranslatorInterface $translator){
+                                TranslatorInterface $translator)
+    {
 
         try{
 
@@ -315,7 +320,11 @@ class UserController extends FOSRestController
             ->serialize($user, 'json')), Response::HTTP_OK);
     }
 
+     
+
     /**
+     * Acción que logea a un usuario.
+     * 
      * @Route("/login", name="user_login", methods={"POST", "GET"})
      * 
      * @SWG\Response(
@@ -341,10 +350,8 @@ class UserController extends FOSRestController
      */
     public function loginUserAction(UserService $userService, Request $request, 
                                     UserPasswordEncoderInterface $encoder, Helpers $helper,
-                                    TranslatorInterface $translator, \Swift_Mailer $mailer)
+                                    TranslatorInterface $translator)
     {
-
-        $userService->sendEmail('inaki', $mailer);
         
         $variables = $request->request;
         $email = $variables->get('email');
@@ -391,6 +398,154 @@ class UserController extends FOSRestController
                                  Response::HTTP_OK);
 
         //return array($user, $now->format("d-m-Y"));
+    }
+
+
+    
+    /**
+     * Metodo que recibe un email, verifica si existe y si es así envía a dicho email un correo
+     * con un enlace para el cmabio de contraseña.
+     * 
+     * @Route("/recoverPassword", name="recoverPassword", methods={"POST"})
+     * @SWG\Response(
+     *     response=200,
+     *     description="Devuelve el objeto en json",
+     *     @SWG\Schema(
+     *         type="array",
+     *         @SWG\Items(ref=@Model(type=Usuario::class, groups={"full"}))
+     *     )
+     * )
+     * 
+     * @SWG\Parameter(
+     *     name="email",
+     *     in="formData",
+     *     type="string",
+     *     description="Correo con el que trabajar"
+     * )
+     * @SWG\Tag(name="Usuario")
+     */
+    public function recoverPassword(UserService $userService, Request $request, Helpers $helper,
+                                    TranslatorInterface $translator, \Swift_Mailer $mailer) 
+    {
+        
+        $variables = $request->request;
+        $email = $variables->get('email');
+        $error = false;
+        $user = $userService->searchUserByEmail($email);
+
+        if(is_null($user)){
+
+            $msg = "incorrect_email_or_password";
+            $msg = $translator->trans($msg);
+            
+            return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+
+        }
+        else {
+
+            $userService->sendEmail($mailer, $user);
+
+            return new JsonResponse(json_decode($this->container->get('jms_serializer')
+            ->serialize($user, 'json')), Response::HTTP_OK);
+
+        }
+
+        
+    }
+
+    /**
+     * Metodo que busca y devuelve un RecoverHash si exsite, en base a su recoverCode
+     * 
+     * @Route("/searchHash", name="searchHash", methods={"POST"})
+     * @SWG\Response(
+     *     response=200,
+     *     description="Devuelve el objeto del hash en json",
+     *     @SWG\Schema(
+     *         type="array",
+     *         @SWG\Items(ref=@Model(type=HashCode::class, groups={"full"}))
+     *     )
+     * )
+     * 
+     * @SWG\Parameter(
+     *     name="recoverCode",
+     *     in="formData",
+     *     type="string",
+     *     description="recoverCode del RecoverHash"
+     * )
+     * 
+     * @SWG\Tag(name="RecoverHash")
+     */
+    public function searchHash(UserService $userService, Request $request) {
+        $variables = $request->request;
+        $recoverCode = $variables->get('recoverCode');
+        $recoverHash = $userService->searchRecoverHashByRecoverCode($recoverCode);
+        if ($recoverHash) {
+            return new JsonResponse(json_decode($this->container->get('jms_serializer')
+            ->serialize($recoverHash, 'json')), Response::HTTP_OK);
+        }
+        else {
+            $msg = "expired";
+            return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Metodo que actualiza la contraseña de un usuario
+     *  
+     * @Route("/updatePassword", name="updatePassword", methods={"PUT"})
+     * @SWG\Response(
+     *     response=200,
+     *     description="Devuelve el objeto del usuario en json",
+     *     @SWG\Schema(
+     *         type="array",
+     *         @SWG\Items(ref=@Model(type=Usuario::class, groups={"full"}))
+     *     )
+     * )
+     * @SWG\Parameter(
+     *     name="password",
+     *     in="formData",
+     *     type="string",
+     *     description="Contraseña del usuario"
+     * ),
+     * @SWG\Parameter(
+     *     name="recoverCode",
+     *     in="formData",
+     *     type="string",
+     *     description="recoverCode del HashCode"
+     * )
+     * @SWG\Tag(name="Usuario")
+     */
+    public function updatePassword(UserService $userService, Request $request, TranslatorInterface $translator, 
+                                    Helpers $helper) {
+        try {
+
+            $variables = $request->request;
+            $recoverCode = $variables->get('recoverCode');
+            $recoverHash = $userService->searchRecoverHashByRecoverCode($recoverCode);
+            $user = $userService->searchUserByRecoverHash($recoverHash);
+
+            if (is_null($user)) {
+                
+                $msg = "no_user_with_id";
+                $msg = $translator->trans($msg);
+            
+                return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+
+            }
+            else {
+
+                $user = $userService->changePassword($user, $request);
+                
+            }
+        }
+        catch(\Exception $e) {
+            
+            $msg = $helper->handleErrors($e);
+            return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+        }
+        
+        return new JsonResponse(json_decode($this->container->get('jms_serializer')
+            ->serialize($user, 'json')), Response::HTTP_OK);
     }
 
     /**

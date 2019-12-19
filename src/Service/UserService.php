@@ -4,16 +4,19 @@ namespace App\Service;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Usuario;
+use App\Entity\RecoverHash;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class UserService
 {
   
   private $em;
 
-  public function __construct(EntityManagerInterface $em,UserPasswordEncoderInterface $encoder){
+  public function __construct(EntityManagerInterface $em,UserPasswordEncoderInterface $encoder,ContainerInterface $container){
     $this->em = $em;
     $this->encoder = $encoder;
+    $this->templating = $container->get('templating');
   }
 
 
@@ -106,6 +109,32 @@ class UserService
             ->findOneBy(['email' => $email]);
     return $user;
     
+  }
+
+  public function searchRecoverHashByRecoverCode($recoverCode) : ?RecoverHash{
+    $recoverHash = $this->em
+            ->getRepository(RecoverHash::class)
+            ->findOneBy(['recoverCode' => $recoverCode]);
+    return $recoverHash;
+  }
+
+  public function searchUserByRecoverHash($recoverHash) : ?Usuario{
+    $user = $this->em
+            ->getRepository(Usuario::class)
+            ->findOneBy(['recoverHash' => $recoverHash]);
+    return $user;
+  }
+
+  public function changePassword(Usuario $user, Request $request) : ?Usuario{
+
+    $variables = $request->request;
+    $encodedPassword = $this->encoder->encodePassword($user, $variables->get('password'));
+    $user->setPassword($encodedPassword);
+
+    $this->em->flush();
+
+    return $user;
+
   }
 
   public function changeUser(Usuario $user, Request $request) : ?Usuario{
@@ -204,21 +233,38 @@ class UserService
 
   }
 
-  public function sendEmail($name, \Swift_Mailer $mailer) {
-    $message = (new  \Swift_Message('Hello Email'))
+  public function sendEmail(\Swift_Mailer $mailer, $user) {
+
+    
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < 50; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+
+    $recoverHash = new RecoverHash();
+    $now = new \DateTime();
+    $recoverHash->setCurrentDate(new \DateTime());
+    $recoverHash->setUser($user);
+    $recoverHash->setRecoverCode($randomString);
+    $this->em->flush();
+    
+    $message = (new \Swift_Message('Hello Email'))
       ->setFrom('iirujoconasa1@gmail.com')
-      ->setTo('inakiirujo@gmail.com')
+      ->setTo($user->getEmail())
       ->setBody(
-        "holajksna de nuevo"
-        /* $this->renderView(
-          'registration.html.twig',
-          ['name' => $name]
+
+          $now
+        /* $this->templating->render(
+          'emails/registration.html.twig',
+          ['randomString' => $randomString]
         ),
         'text/html' */
       );
-      $mailer->send($message);
-      
-      //return $this->render(...);
+    $mailer->send($message);
+  
+    //return $this->render(...);
   }
 
 }

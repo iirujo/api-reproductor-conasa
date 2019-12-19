@@ -1,0 +1,4 @@
+no_user_with_id: The introduced ID does not match with a registered one.
+incorrect_email_or_password: Incorrect email or password introduced.
+welcome_msg: Welcome to Inaki's website!
+login_success: You have logged in.

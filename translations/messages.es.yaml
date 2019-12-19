@@ -1,0 +1,4 @@
+no_user_with_id: El ID introducido no coincide con ninguno registrado.
+incorrect_email_or_password: El campo email o password es incorrecto.
+welcome_msg: ¡Bienvenid@ a la pagina de Inaki!
+login_success: Has iniciado sesion.

@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -114,6 +116,16 @@ class Usuario implements UserInterface
      */
     private $fechaNacimiento;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\RecoverHash", mappedBy="user")
+     */
+    private $recoverHash;
+
+    public function __construct()
+    {
+        $this->recoverHash = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -201,6 +213,37 @@ class Usuario implements UserInterface
     public function setFechaNacimiento(\DateTimeInterface $fechaNacimiento): self
     {
         $this->fechaNacimiento = $fechaNacimiento;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RecoverHash[]
+     */
+    public function getRecoverHash(): Collection
+    {
+        return $this->recoverHash;
+    }
+
+    public function addRecoverHash(RecoverHash $recoverHash): self
+    {
+        if (!$this->recoverHash->contains($recoverHash)) {
+            $this->recoverHash[] = $recoverHash;
+            $recoverHash->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRecoverHash(RecoverHash $recoverHash): self
+    {
+        if ($this->recoverHash->contains($recoverHash)) {
+            $this->recoverHash->removeElement($recoverHash);
+            // set the owning side to null (unless already changed)
+            if ($recoverHash->getUser() === $this) {
+                $recoverHash->setUser(null);
+            }
+        }
 
         return $this;
     }

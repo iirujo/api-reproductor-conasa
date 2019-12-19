@@ -1,0 +1,36 @@
+security:
+    # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    providers:
+        in_memory:
+            memory:
+                users:
+                    inaki:
+                        password: ConaseraSalsera2020
+                        roles: 'ROLE_USER'
+                    admin:
+                        password: conasaConasera2019
+                        roles: 'ROLE_ADMIN'
+    
+    encoders:
+        Symfony\Component\Security\Core\User\User: plaintext
+        App\Entity\Usuario: bcrypt
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            anonymous: ~
+            http_basic: ~
+
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#firewalls-authentication
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        # require ROLE_ADMIN for /admin*
+        - { path: '^/(en|es)/api', roles: [ROLE_USER,ROLE_ADMIN] }
