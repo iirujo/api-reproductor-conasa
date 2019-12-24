@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20190924092431 extends AbstractMigration
+final class Version20191218131106 extends AbstractMigration
 {
     public function getDescription() : string
     {
@@ -22,7 +22,9 @@ final class Version20190924092431 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
 
-        $this->addSql('CREATE TABLE usuario (id INT AUTO_INCREMENT NOT NULL, nombre VARCHAR(255) NOT NULL, apellidos VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, fechaNacimiento DATETIME NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB');
+        $this->addSql('ALTER TABLE recover_hash ADD user_id INT NOT NULL');
+        $this->addSql('ALTER TABLE recover_hash ADD CONSTRAINT FK_94C9A059A76ED395 FOREIGN KEY (user_id) REFERENCES usuario (id)');
+        $this->addSql('CREATE INDEX IDX_94C9A059A76ED395 ON recover_hash (user_id)');
     }
 
     public function down(Schema $schema) : void
@@ -30,6 +32,8 @@ final class Version20190924092431 extends AbstractMigration
         // this down() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
 
-        $this->addSql('DROP TABLE usuario');
+        $this->addSql('ALTER TABLE recover_hash DROP FOREIGN KEY FK_94C9A059A76ED395');
+        $this->addSql('DROP INDEX IDX_94C9A059A76ED395 ON recover_hash');
+        $this->addSql('ALTER TABLE recover_hash DROP user_id');
     }
 }

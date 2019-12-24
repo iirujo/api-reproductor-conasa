@@ -2,16 +2,21 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UsuarioRepository")
- * @UniqueEntity("email")
+ * @UniqueEntity(
+ *      fields = "email",
+ *      message = "validators.usuario.email.UniqueEntity"
+ *  )
  */
-class Usuario
+class Usuario implements UserInterface
 {
     /**
      * @ORM\Id()
@@ -22,48 +27,104 @@ class Usuario
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank
-     * @Assert\NotNull
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.nombre.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.nombre.NotNull"
+     * )
      * @Assert\Length(
      *     min = 2,
      *     max = 20,
-     *     minMessage = "Your first name must be at least 2 characters long",
-     *     maxMessage = "Your first name cannot be longer than 20 characters"
+     *     minMessage = "validators.usuario.nombre.Length.minMessage",
+     *     maxMessage = "validators.usuario.nombre.Length.maxMessage"
      * )
      */
     private $nombre;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank
-     * @Assert\NotNull
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.apellidos.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.apellidos.NotNull"
+     * )
      * @Assert\Length(
      *     min = 4,
      *     max = 50,
-     *     minMessage = "Your surname must be at least {{ limit }} characters long",
-     *     maxMessage = "Your surname cannot be longer than {{ limit }} characters"
+     *     minMessage = "validators.usuario.apellidos.Length.minMessage",
+     *     maxMessage = "validators.usuario.apellidos.Length.maxMessage"
      * )
      */
     private $apellidos;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank
-     * @Assert\NotNull
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.email.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.email.NotNull"
+     * )
      * @Assert\Email(
-     *     message = "The email '{{ value }}' is not a valid email.",
+     *     message = "validators.usuario.email.Email",
      *     checkMX = true
      * )
      */
     private $email;
 
     /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.username.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.username.NotNull"
+     * )
+     */
+    private $username;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(
+     *     message = "validators.usuario.password.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.password.NotNull"
+     * )
+     * @Assert\Length(
+     *     min = 4,
+     *     max = 30,
+     *     minMessage = "validators.usuario.password.Length.minMessage",
+     *     maxMessage = "validators.usuario.password.Length.maxMessage"
+     * )
+     */
+    private $password;
+
+    /**
      * @ORM\Column(type="datetime")
-     * @Assert\NotBlank
-     * @Assert\NotNull
-     * @Assert\DateTime
+     * @Assert\DateTime(
+     *      message = "validators.usuario.fechaNacimiento.DateTime"
+     * )
+     *  @Assert\NotBlank(
+     *     message = "validators.usuario.fechaNacimiento.NotBlank"
+     * )
+     * @Assert\NotNull(
+     *     message = "validators.usuario.fechaNacimiento.NotNull"
+     * )
      */
     private $fechaNacimiento;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\RecoverHash", mappedBy="user")
+     */
+    private $recoverHash;
+
+    public function __construct()
+    {
+        $this->recoverHash = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -106,6 +167,44 @@ class Usuario
         return $this;
     }
 
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): self
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+    
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    public function getSalt()
+    {
+        // The bcrypt and argon2i algorithms don't require a separate salt.
+        // You *may* need a real salt if you choose a different encoder.
+        return null;
+    }
+    public function getRoles()
+    {
+        return $this->roles;
+    }
+    public function eraseCredentials()
+    {
+    }
+
     public function getFechaNacimiento(): ?\DateTimeInterface
     {
         return $this->fechaNacimiento;
@@ -114,6 +213,37 @@ class Usuario
     public function setFechaNacimiento(\DateTimeInterface $fechaNacimiento): self
     {
         $this->fechaNacimiento = $fechaNacimiento;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RecoverHash[]
+     */
+    public function getRecoverHash(): Collection
+    {
+        return $this->recoverHash;
+    }
+
+    public function addRecoverHash(RecoverHash $recoverHash): self
+    {
+        if (!$this->recoverHash->contains($recoverHash)) {
+            $this->recoverHash[] = $recoverHash;
+            $recoverHash->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRecoverHash(RecoverHash $recoverHash): self
+    {
+        if ($this->recoverHash->contains($recoverHash)) {
+            $this->recoverHash->removeElement($recoverHash);
+            // set the owning side to null (unless already changed)
+            if ($recoverHash->getUser() === $this) {
+                $recoverHash->setUser(null);
+            }
+        }
 
         return $this;
     }

@@ -1,0 +1,59 @@
+validators:
+  usuario:
+    nombre:
+      NotBlank: Field name cannot be blank.
+
+      NotNull: Field name cannot be null.
+
+      Length:
+          minMessage: Name must have at least { limit } characters.
+
+          maxMessage: Name must have at most { limit } characters.
+    apellidos:
+      NotBlank: Field surnames cannot be blank.
+
+      NotNull: Field surnames cannot be null.
+
+      Length:
+          minMessage: Surnames must have at least { limit } characters.
+
+          maxMessage: Surnames must have at most { limit } characters.
+
+    email:
+      NotBlank: Field email cannot be blank.
+
+      NotNull: Field email cannot be null.
+
+      Email: The email { value } is not a valid email.
+
+      UniqueEntity: The email { value } already	exists on database.
+
+    password:
+      NotBlank: Field password cannot be blank.
+
+      NotNull: Field password cannot be null.
+
+      Length:
+        minMessage: Password must have at least { limit } characters.
+
+        maxMessage: Password must have at most { limit } characters.
+
+    username:
+      NotBlank: Field username cannot be blank.
+
+      NotNull: Field username cannot be null.
+
+    fechaNacimiento:
+      NotBlank: Field bornDate cannot be blank.
+
+      NotNull: Field bornDate cannot be null.
+
+      DateTime: Introduced date or introduced date format is not correct.
+noId: There's no user that matches the introduced ID.
+bienvenida: Welcome to Inaki's web!
+
+
+  
+   
+   
+

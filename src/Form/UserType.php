@@ -16,11 +16,14 @@ class UserType extends AbstractType
     $builder
       ->add('nombre')
       ->add('apellidos')
-      ->add('email',EmailType::class)
-      ->add('fecha_nacimiento', DateType::class, [
-        'widget' => 'single_text',
-        'format' => 'yyyy-MM-dd',
-      ])
+      ->add('username')
+      ->add('email')
+      ->add('password')
+      ->add('fechaNacimiento', DateTimeType::class, array(
+            'widget' => 'single_text',
+            'input' => 'datetime',
+            'format' => 'yyyy-mm-dd'
+        ))
     ;
   }
   public function configureOptions(OptionsResolver $resolver)

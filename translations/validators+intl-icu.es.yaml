@@ -1,0 +1,57 @@
+validators:
+  usuario:
+    nombre:
+      NotBlank: El campo nombre no puede estar vacio.
+
+      NotNull: El campo nombre no puede ser nulo.
+
+      Length:
+        minMessage: El nombre debe tener al menos { limit } caracteres.
+
+        maxMessage: El nombre de tener como máximo { limit } caracteres.
+  
+    apellidos:
+      NotBlank: El campo apellidos no puede estar vacio.
+
+      NotNull: El campo apellidos no puede ser nulo.
+
+      Length:
+        minMessage: Los apellidos deben tener al menos { limit } caracteres.
+
+        maxMessage: Los apellidos deben tener como máximo { limit } caracteres.
+
+    email:
+      NotBlank: El campo email no puede estar vacio.
+
+      NotNull: El campo email no puede estar vacio.
+
+      Email: El email { value } no es un email válido.
+
+      UniqueEntity: El email { value } ya está registrado.
+
+    password:
+      NotBlank: El campo password no puede estar vacio.
+
+      NotNull: El campo password no puede ser nulo.
+
+      Length:
+        minMessage: La contraseña debe tener al menos { limit } caracteres.
+
+        maxMessage: La contraseña de tener como máximo { limit } caracteres.
+
+    username:
+      NotBlank: El campo username no puede estar vacio.
+      NotNull: El campo username no puede estar vacio.
+
+    fechaNacimiento:
+      NotBlank: El campo fechaNacimiento no puede estar vacio.
+      
+      NotNull: El campo fechaNacimiento no puede estar vacio.
+
+      DateTime: La fecha o el formato de la fecha no es correcto.
+noId: No hay ningun usuario que coincida con ese ID.
+bienvenida: ¡Bienvenido/a a la pagina de Inaki!
+
+   
+   
+
