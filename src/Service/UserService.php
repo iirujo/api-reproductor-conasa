@@ -11,7 +11,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class UserService
 {
   
-  private $em;
 
   public function __construct(EntityManagerInterface $em,UserPasswordEncoderInterface $encoder,ContainerInterface $container){
     $this->em = $em;
@@ -111,19 +110,13 @@ class UserService
     
   }
 
-  public function searchRecoverHashByRecoverCode($recoverCode) : ?RecoverHash{
+  public function searchRecoverHashByHash($recoverCode) : ?RecoverHash{
     $recoverHash = $this->em
             ->getRepository(RecoverHash::class)
-            ->findOneBy(['recoverCode' => $recoverCode]);
+            ->findOneBy(['hash' => $recoverCode]);
     return $recoverHash;
   }
 
-  public function searchUserByRecoverHash($recoverHash) : ?Usuario{
-    $user = $this->em
-            ->getRepository(Usuario::class)
-            ->findOneBy(['recoverHash' => $recoverHash]);
-    return $user;
-  }
 
   public function changePassword(Usuario $user, Request $request) : ?Usuario{
 
@@ -187,6 +180,25 @@ class UserService
 
   }
 
+  public function removeExpiredRecoverHash() {
+
+    $repository = $this->em->getRepository(RecoverHash::Class);
+    $expireds = $repository->findByDateLowerOnes();
+
+    foreach ($expireds as $expired) {
+      $this->em->remove($expired);
+    }
+    $this->em->flush();
+
+  }
+
+  public function eraseRecoverHash(RecoverHash $recoverHash) {
+
+    $this->em->remove($recoverHash);
+    $this->em->flush();
+
+  }
+
   public function authorize() {
 
     $ch = curl_init();
@@ -235,7 +247,43 @@ class UserService
 
   public function sendEmail(\Swift_Mailer $mailer, $user) {
 
-    
+    $exists = true;
+
+    while($exists) {
+      $randomString = $this->createCode();
+
+      if (is_null($this->searchRecoverHashByHash($randomString))) {
+        $exists = false;
+      }
+    }
+
+    $recoverHash = new RecoverHash();
+    $now = new \DateTime();
+    $now->modify("+ 30 minutes");
+    $recoverHash->setDate($now);
+    $recoverHash->setUsuario($user);
+    $recoverHash->setHash($randomString);
+
+    $this->em->persist($recoverHash);
+    $this->em->flush();
+
+    $message = (new \Swift_Message('Hello Email'))
+      ->setFrom('iirujoconasa1@gmail.com')
+      ->setTo($user->getEmail())
+      ->setBody(
+         $this->templating->render(
+          'emails/registration.html.twig',
+          ['randomString' => $randomString]
+        ),
+        'text/html'
+      );
+    $mailer->send($message);
+  
+    //return $this->render(...);
+  }
+
+  public function createCode() {
+
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
     $randomString = '';
@@ -243,28 +291,7 @@ class UserService
         $randomString .= $characters[rand(0, $charactersLength - 1)];
     }
 
-    $recoverHash = new RecoverHash();
-    $now = new \DateTime();
-    $recoverHash->setCurrentDate(new \DateTime());
-    $recoverHash->setUser($user);
-    $recoverHash->setRecoverCode($randomString);
-    $this->em->flush();
-    
-    $message = (new \Swift_Message('Hello Email'))
-      ->setFrom('iirujoconasa1@gmail.com')
-      ->setTo($user->getEmail())
-      ->setBody(
-
-          $now
-        /* $this->templating->render(
-          'emails/registration.html.twig',
-          ['randomString' => $randomString]
-        ),
-        'text/html' */
-      );
-    $mailer->send($message);
-  
-    //return $this->render(...);
+    return $randomString;
   }
 
 }

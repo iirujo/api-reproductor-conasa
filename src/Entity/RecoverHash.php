@@ -19,56 +19,55 @@ class RecoverHash
     /**
      * @ORM\Column(type="string", length=50)
      */
-    private $RecoverCode;
+    private $hash;
 
     /**
      * @ORM\Column(type="datetime")
      */
-    private $CurrentDate;
+    private $date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\Usuario", inversedBy="recoverHash")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\ManyToOne(targetEntity="App\Entity\Usuario", inversedBy="recoverHashes")
      */
-    private $user;
+    private $usuario;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getRecoverCode(): ?string
+    public function getHash(): ?string
     {
-        return $this->RecoverCode;
+        return $this->hash;
     }
-    
-    public function setRecoverCode(string $RecoverCode): self
+
+    public function setHash(string $hash): self
     {
-        $this->RecoverCode = $RecoverCode;
+        $this->hash = $hash;
 
         return $this;
     }
 
-    public function getCurrentDate(): ?\DateTimeInterface
+    public function getDate(): ?\DateTimeInterface
     {
-        return $this->CurrentDate;
+        return $this->date;
     }
 
-    public function setCurrentDate(\DateTimeInterface $CurrentDate): self
+    public function setDate(\DateTimeInterface $date): self
     {
-        $this->CurrentDate = $CurrentDate;
+        $this->date = $date;
 
         return $this;
     }
 
-    public function getUser(): ?Usuario
+    public function getUsuario(): ?Usuario
     {
-        return $this->user;
+        return $this->usuario;
     }
 
-    public function setUser(?Usuario $user): self
+    public function setUsuario(?Usuario $usuario): self
     {
-        $this->user = $user;
+        $this->usuario = $usuario;
 
         return $this;
     }

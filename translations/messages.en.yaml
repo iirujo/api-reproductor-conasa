@@ -1,4 +1,5 @@
 no_user_with_id: The introduced ID does not match with a registered one.
 incorrect_email_or_password: Incorrect email or password introduced.
+expired_or_incorrect_link: The link is incorrect or it has expired.
 welcome_msg: Welcome to Inaki's website!
 login_success: You have logged in.

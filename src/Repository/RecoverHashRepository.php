@@ -19,6 +19,19 @@ class RecoverHashRepository extends ServiceEntityRepository
         parent::__construct($registry, RecoverHash::class);
     }
 
+    
+    public function findByDateLowerOnes() 
+    {
+        $now = new \DateTime();
+
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.date <= :val')
+            ->setParameter('val', $now)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
     // /**
     //  * @return RecoverHash[] Returns an array of RecoverHash objects
     //  */
