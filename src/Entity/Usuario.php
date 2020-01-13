@@ -117,13 +117,13 @@ class Usuario implements UserInterface
     private $fechaNacimiento;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\RecoverHash", mappedBy="user")
+     * @ORM\OneToMany(targetEntity="App\Entity\RecoverHash", mappedBy="usuario")
      */
-    private $recoverHash;
+    private $recoverHashes;
 
     public function __construct()
     {
-        $this->recoverHash = new ArrayCollection();
+        $this->recoverHashes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -220,16 +220,16 @@ class Usuario implements UserInterface
     /**
      * @return Collection|RecoverHash[]
      */
-    public function getRecoverHash(): Collection
+    public function getRecoverHashes(): Collection
     {
-        return $this->recoverHash;
+        return $this->recoverHashes;
     }
 
     public function addRecoverHash(RecoverHash $recoverHash): self
     {
-        if (!$this->recoverHash->contains($recoverHash)) {
-            $this->recoverHash[] = $recoverHash;
-            $recoverHash->setUser($this);
+        if (!$this->recoverHashes->contains($recoverHash)) {
+            $this->recoverHashes[] = $recoverHash;
+            $recoverHash->setUsuario($this);
         }
 
         return $this;
@@ -237,11 +237,11 @@ class Usuario implements UserInterface
 
     public function removeRecoverHash(RecoverHash $recoverHash): self
     {
-        if ($this->recoverHash->contains($recoverHash)) {
-            $this->recoverHash->removeElement($recoverHash);
+        if ($this->recoverHashes->contains($recoverHash)) {
+            $this->recoverHashes->removeElement($recoverHash);
             // set the owning side to null (unless already changed)
-            if ($recoverHash->getUser() === $this) {
-                $recoverHash->setUser(null);
+            if ($recoverHash->getUsuario() === $this) {
+                $recoverHash->setUsuario(null);
             }
         }
 

@@ -430,7 +430,6 @@ class UserController extends FOSRestController
         
         $variables = $request->request;
         $email = $variables->get('email');
-        $error = false;
         $user = $userService->searchUserByEmail($email);
 
         if(is_null($user)){
@@ -442,7 +441,6 @@ class UserController extends FOSRestController
 
         }
         else {
-
             $userService->sendEmail($mailer, $user);
 
             return new JsonResponse(json_decode($this->container->get('jms_serializer')
@@ -520,9 +518,9 @@ class UserController extends FOSRestController
         try {
 
             $variables = $request->request;
-            $recoverCode = $variables->get('recoverCode');
-            $recoverHash = $userService->searchRecoverHashByRecoverCode($recoverCode);
-            $user = $userService->searchUserByRecoverHash($recoverHash);
+            $hash = $variables->get('hash');
+            $recoverHash = $userService->searchRecoverHashByHash($hash);
+            $user = $userService->searchUserById($recoverHash->getUsuario()->getId());
 
             if (is_null($user)) {
                 
@@ -535,6 +533,7 @@ class UserController extends FOSRestController
             else {
 
                 $user = $userService->changePassword($user, $request);
+                $userService->eraseRecoverHash($recoverHash);
                 
             }
         }
@@ -587,6 +586,56 @@ class UserController extends FOSRestController
         }
 
         return new JsonResponse(json_decode($result), Response::HTTP_OK);
+    }
+
+    /**
+     * Metodo que busca y muestra recoverHash a partir de su hash
+     * 
+     * @Route("/searchRecoverHash", name="searchRecoverHash", methods={"POST"})
+     * @SWG\Response(
+     *     response=200,
+     *     description="Devuelve el objeto en json",
+     *     @SWG\Schema(
+     *         type="array",
+     *         @SWG\Items(ref=@Model(type=Usuario::class, groups={"full"}))
+     *     )
+     * )
+     * 
+     * @SWG\Parameter(
+     *     name="hash",
+     *     in="formData",
+     *     type="string",
+     *     description="Hash con el que buscar el recoverHash"
+     * )
+     * @SWG\Tag(name="Usuario")
+     */
+    public function searchRecoverHash(UserService $userService, Helpers $helper, Request $request, 
+                                        TranslatorInterface $translator)
+    {
+
+        try{
+            $variables = $request->request;
+            $hash = $variables->get('hash');
+            $recoverHash = $userService->searchRecoverHashByHash($hash);
+            $now = new \DateTime();
+
+            if (is_null($recoverHash) || ($recoverHash->getDate() < $now)) {
+                $msg = "expired_or_incorrect_link";
+                $msg = $translator->trans($msg);
+            
+                return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+            }
+
+        } catch(\Exception $e) {
+
+            $msg = $helper->handleErrors($e);
+            return new JsonResponse(['error' => $msg], Response::HTTP_BAD_REQUEST);
+
+        }
+
+
+        return new JsonResponse(json_decode($this->container->get('jms_serializer')
+            ->serialize($recoverHash, 'json')), Response::HTTP_OK);
     }
 
     /**
